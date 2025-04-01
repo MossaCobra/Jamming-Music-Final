@@ -1,17 +1,16 @@
 import React, { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import SearchBar from './components/Playlist'
-import Tracklist from './components/Playlist'
+import SearchBar from './components/SearchBar'
+import Tracklist from './components/Tracklist'
 import Playlist from './components/Playlist'
 
 
 function App() {
-  const [count, setCount] = useState(0)
+
 
   return (
     <>
+      <h1>Jamming Music</h1>
       <SearchBar />
       <Tracklist />
       <Playlist />
