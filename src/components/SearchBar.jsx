@@ -1,22 +1,15 @@
-import React from 'react'
+import React from 'react';
 
 function SearchBar({ search }) {
-  
-  function handleSearch(event) {
-    event.preventDefault();
-    search();
-  }
-
   return (
     <>
       <input
         type="text"
         placeholder="Search for a track"
-        onChange={(e) => search(e.target.value)} 
+        onChange={(e) => search(e.target.value)} // Update searchTerm in App.js as the user types
       />
-      <button onClick={handleSearch}>Search</button>
     </>
-  )
+  );
 }
 
 export default SearchBar;

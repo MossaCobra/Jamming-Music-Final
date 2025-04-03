@@ -1,36 +1,33 @@
-import React, { useState } from 'react'
-import './App.css'
-import SearchBar from './components/SearchBar'
-import Tracklist from './components/Tracklist'
-import Playlist from './components/Playlist'
-import { searchTracks } from './components/Spotify'
-
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import SearchBar from './components/SearchBar';
+import Tracklist from './components/Tracklist';
+import Playlist from './components/Playlist';
+import { searchTracks } from './components/Spotify';
 
 function App() {
-  const [track, setTrack] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [playlist, setPlaylist] = useState([]);
-  const [playlistName, setPlaylistName] = useState('');
+  const [track, setTrack] = useState([]); 
+  const [searchTerm, setSearchTerm] = useState(''); 
 
-  const handleSearch = async () => {
-    if (searchTerm) {
-      const tracks = await searchTracks(searchTerm);
-      setTrack(tracks);
-    }
-  }
-
-  function addTrack(track) {
-    setTrack(prevTracks => [...prevTracks, track]);
-  }
+  // Trigger the API call whenever the searchTerm changes
+  useEffect(() => {
+    const fetchTracks = async () => {
+      if (searchTerm) { 
+        const tracks = await searchTracks(searchTerm); 
+        setTrack(tracks); 
+      }
+    };
+    fetchTracks(); 
+  }, [searchTerm]);
 
   return (
     <>
       <h1>Jamming Music</h1>
       <SearchBar search={setSearchTerm} />
-      <Tracklist />
+      <Tracklist tracks={track} />
       <Playlist />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
