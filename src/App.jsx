@@ -3,28 +3,30 @@ import './App.css';
 import SearchBar from './components/SearchBar';
 import Tracklist from './components/Tracklist';
 import Playlist from './components/Playlist';
-import { searchTracks } from './components/Spotify';
+import searchTracks from './components/Spotify';
 
 function App() {
-  const [track, setTrack] = useState([]); 
-  const [searchTerm, setSearchTerm] = useState(''); 
+  const [tracks, setTracks] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearching, setIsSearching] = useState(false); 
 
-  // Trigger the API call whenever the searchTerm changes
+  // Trigger the API call when the user presses the button
   useEffect(() => {
     const fetchTracks = async () => {
-      if (searchTerm) { 
-        const tracks = await searchTracks(searchTerm); 
-        setTrack(tracks); 
+      if (isSearching && searchTerm) {
+        const track = await searchTracks(searchTerm);
+        setTracks(track);
       }
     };
-    fetchTracks(); 
-  }, [searchTerm]);
+    fetchTracks();
+  }, [isSearching, searchTerm]); // listen for button click and searchTerm change
+
 
   return (
     <>
       <h1>Jamming Music</h1>
-      <SearchBar search={setSearchTerm} />
-      <Tracklist tracks={track} />
+      <SearchBar search={setSearchTerm} setIsSearching={setIsSearching} />
+      <Tracklist tracks={tracks} />
       <Playlist />
     </>
   );

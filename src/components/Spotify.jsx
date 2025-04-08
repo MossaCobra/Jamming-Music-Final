@@ -1,39 +1,45 @@
-import React, { useState } from 'react'
+import React from 'react';
 
-const clientId = 'your-client-id'
-const secretClientId = 'your-client-secret'
-
+const clientId = import.meta.env.VITE_CLIENT_ID;
+const secretClientId = import.meta.env.VITE_SECRET_CLIENT_ID;
 
 const getToken = async () => {
   const tokenResponse = await fetch(
     'https://accounts.spotify.com/api/token', 
     {
       method: 'POST',
-      headers: "Content-Type: application/x-www-form-urlencoded",
-      body: "grant_type=client_credentials&client_id=your-client-id&client_secret=your-client-secret"
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `grant_type=client_credentials&client_id=${clientId}&client_secret=${secretClientId}`
     }
   );
 
   const tokenData = await tokenResponse.json();
   return tokenData.access_token;
-}
+};
 
 const searchTracks = async (searchTerm) => {
-  const accessToken = await getToken();
-
-  const trackResponse = await fetch(
-    `https://api.spotify.com/v1/search?q=track%3A${encodeURIComponent(searchTerm)}&type=track`,
-    {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+  try {
+    const accessToken = await getToken();  // Fetch the token
+    const trackResponse = await fetch(
+      `https://api.spotify.com/v1/search?q=track%3A${encodeURIComponent(searchTerm)}&type=track`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
       }
-    }
-  );
+    );
 
-  const trackData = await trackResponse.json();
-  return trackData;
-}
+    const trackData = await trackResponse.json();
+    console.log(trackData);
+    return trackData;
+  } catch (error) {
+    console.error('Error fetching tracks:', error);
+  }
+};
+
 
 export default searchTracks;
