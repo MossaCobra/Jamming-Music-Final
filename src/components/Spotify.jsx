@@ -34,10 +34,10 @@ const searchTracks = async (searchTerm) => {
     );
 
     const trackData = await trackResponse.json();
-    console.log(trackData);
-    return trackData;
+    console.log(trackData)
+    return trackData.tracks.items;
   } catch (error) {
-    console.error('Error fetching tracks:', error);
+    throw new Error('Error fetching tracks: ' + error.message);
   }
 };
 
