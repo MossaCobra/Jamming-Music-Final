@@ -1,3 +1,17 @@
+  .main-content {
+    display: flex;    
+    justify-content: space-between; 
+    gap: 20px;              
+    flex-wrap: wrap;        
+  }
+
+  .tracklist, .playlist {
+    flex: 1;                
+    max-width: 48%;         
+    min-width: 300px;      
+  }
+
+
 .tracklist {
     display: flex;
     flex-direction: column;

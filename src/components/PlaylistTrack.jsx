@@ -1,7 +1,7 @@
 import React from 'react';
-import '../styles/Music.css';  
+import '../styles/Music.css';
 
-function Track({ name, artist, album, onAdd }) {
+function PlaylistTrack({ name, artist, album, onRemove }) {
   return (
     <div className="track">
       <div className="track-details">
@@ -10,11 +10,11 @@ function Track({ name, artist, album, onAdd }) {
           <h3>{name}</h3>
           <p>Artist: {artist}</p>
           <p>Album: {album.name}</p>
-          <button onClick={onAdd}>Add to Playlist</button>
+          <button onClick={onRemove}>Remove</button>
         </div>
       </div>
     </div>
   );
 }
 
-export default Track;
+export default PlaylistTrack;

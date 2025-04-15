@@ -9,6 +9,8 @@ function App() {
   const [tracks, setTracks] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false); 
+  const [userPlaylist, setUserPlaylist] = useState([]);
+
 
   // Trigger the API call when the user presses the button
   useEffect(() => {
@@ -22,12 +24,26 @@ function App() {
   }, [isSearching, searchTerm]); // listen for button click and searchTerm change
 
 
+    // Add a track to the user's playlist
+    const addToPlaylist = (track) => {
+      setUserPlaylist((prevPlaylist) => [...prevPlaylist, track]);
+    };
+
+    // Remove a track from the user's playlist
+    const removeFromPlaylist = (trackToRemove) => {
+      setUserPlaylist(prev => prev.filter(track => track.id !== trackToRemove.id));
+    };
+    
+
+
   return (
     <>
       <h1>Jamming Music</h1>
       <SearchBar search={setSearchTerm} setIsSearching={setIsSearching} />
-      <Tracklist tracks={tracks} />
-      <Playlist />
+      <div className="main-content">
+        <Tracklist tracks={tracks} addToPlaylist={addToPlaylist} />
+        <Playlist tracks={userPlaylist} removeFromPlaylist={removeFromPlaylist}/>
+      </div>
     </>
   );
 }

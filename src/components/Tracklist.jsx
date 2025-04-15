@@ -1,7 +1,7 @@
 import React from 'react'
 import Track from './Track'
 
-function Tracklist({ tracks }) {
+function Tracklist({ tracks, addToPlaylist }) {
   return (
     <div className="tracklist">
       {tracks.map((track, index) => (
@@ -11,6 +11,7 @@ function Tracklist({ tracks }) {
           artist={track.artists[0].name}
           album={track.album}
           image={track.album.images}
+          onAdd={() => addToPlaylist(track)} // Pass the track to the addToPlaylist function
         />
       ))}
     </div>
