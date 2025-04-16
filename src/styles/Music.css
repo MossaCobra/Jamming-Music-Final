@@ -1,50 +1,119 @@
-  .main-content {
-    display: flex;    
-    justify-content: space-between; 
-    gap: 20px;              
-    flex-wrap: wrap;        
-  }
+#root  {
+  max-width: 1964px;
+  min-width: 1300px; 
+}
 
-  .tracklist, .playlist {
-    flex: 1;                
-    max-width: 48%;         
-    min-width: 300px;      
-  }
+body {
+  background-image: url('./src/assets/backgroundimg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin: 0;
+}
 
+
+.main-content {
+  display: flex;    
+  justify-content: space-between;             
+  flex-wrap: wrap;
+  margin-top: 50px;
+}
+
+.main-content h2 {
+  margin-right: 20px;
+  text-decoration: underline;
+  text-decoration-color: #ffffff;
+  text-decoration-thickness: 2px;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.search-bar {
+  display: inline-flex;
+  gap: 15px
+}
 
 .tracklist {
-    display: flex;
-    flex-direction: column;
-    align-items: center; 
-    justify-content: flex-start; 
-  }
-  
-  .track {
-    display: flex;
-    align-items: center; 
-    margin: 10px 0; 
-    width: 80%; 
-  }
-  
-  .track-details {
-    display: flex;
-    align-items: center;
-    gap: 15px; 
-    width: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 0.5rem;
-    padding: 10px;
-  }
-  
-  .track img {
-    width: 100px;
-    height: 100px;
-    object-fit: cover; 
-  }
-  
-  .track h3,
-  .track p {
-    margin: 0; 
-    text-align: left; 
-  }
-  
+  flex: 1;
+  max-width: 48%;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  min-height: 200px;
+  max-height: 600px;
+  overflow-y: auto;
+  direction: rtl; 
+}
+
+.tracklist > * {
+  direction: ltr; 
+}
+
+
+.tracklist::-webkit-scrollbar {
+  width: 5px; 
+}
+
+.tracklist::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px; 
+}
+
+.tracklist::-webkit-scrollbar-thumb:hover {
+  background-color: #555; 
+}
+
+
+.track {
+  display: flex;
+  align-items: center; 
+  margin: 10px 0; 
+  width: 80%; 
+}
+
+.track img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover; 
+}
+
+.track-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  max-width: 50rem;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 0.5rem;
+  padding: 10px;
+}
+
+.track h3,
+.track p {
+  margin: 0; 
+  text-align: left; 
+}
+.button {
+  background-color: #4CAF50; 
+  color: white; 
+  border: none; 
+  border-radius: 5px; 
+  cursor: pointer; 
+  font-size: 14px;
+  padding: 6px 10px; 
+  margin-top: 10px;
+}
+
+.button-remove {
+  background-color: #e53935;
+}
+.button:hover {
+  background-color: #2b662e; 
+}
+.button-remove:hover {
+  background-color: #661717; 
+}
+

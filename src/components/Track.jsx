@@ -6,11 +6,11 @@ function Track({ name, artist, album, onAdd }) {
     <div className="track">
       <div className="track-details">
         <img src={album.images[0].url} alt={`${name} album cover`} />
-        <div>
+        <div className='track-info'>
           <h3>{name}</h3>
           <p>Artist: {artist}</p>
           <p>Album: {album.name}</p>
-          <button onClick={onAdd}>Add to Playlist</button>
+          <button className='button' onClick={onAdd}>Add to Playlist</button>
         </div>
       </div>
     </div>

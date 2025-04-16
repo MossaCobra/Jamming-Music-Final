@@ -35,13 +35,14 @@ function App() {
     };
     
 
-
   return (
     <>
       <h1>Jamming Music</h1>
       <SearchBar search={setSearchTerm} setIsSearching={setIsSearching} />
       <div className="main-content">
+        {/*<h2>Search Results:</h2>*/}
         <Tracklist tracks={tracks} addToPlaylist={addToPlaylist} />
+        {/*<h2>Your Playlist:</h2>*/}
         <Playlist tracks={userPlaylist} removeFromPlaylist={removeFromPlaylist}/>
       </div>
     </>

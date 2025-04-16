@@ -3,7 +3,7 @@ import PlaylistTrack from './PlaylistTrack';
 
 function Playlist({ tracks, removeFromPlaylist }) {
   return (
-    <div className="playlist">
+    <div className="tracklist">
       {tracks.map((track, index) => (
         <PlaylistTrack
           key={index}

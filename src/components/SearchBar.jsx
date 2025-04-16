@@ -11,7 +11,7 @@ function SearchBar({ search, setIsSearching }) {
 
 
   return (
-    <div>
+    <div className="search-bar">
       <input
         type="text"
         value={inputValue}

@@ -10,7 +10,7 @@ function PlaylistTrack({ name, artist, album, onRemove }) {
           <h3>{name}</h3>
           <p>Artist: {artist}</p>
           <p>Album: {album.name}</p>
-          <button onClick={onRemove}>Remove</button>
+          <button className='button button-remove'onClick={onRemove}>Remove</button>
         </div>
       </div>
     </div>
