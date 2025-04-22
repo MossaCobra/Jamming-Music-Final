@@ -1,5 +1,3 @@
-import React from 'react';
-
 const clientId = import.meta.env.VITE_CLIENT_ID;
 const secretClientId = import.meta.env.VITE_SECRET_CLIENT_ID;
 
@@ -34,6 +32,13 @@ const searchTracks = async (searchTerm) => {
     );
 
     const trackData = await trackResponse.json();
+    
+     // Show each title in the main content
+    const titles = document.querySelectorAll('.main-content h2');
+    titles.forEach(title => {
+      title.style.display = 'block';
+    });
+
     console.log(trackData)
     return trackData.tracks.items;
   } catch (error) {

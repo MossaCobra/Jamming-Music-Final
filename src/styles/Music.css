@@ -1,22 +1,36 @@
 #root  {
   max-width: 1964px;
   min-width: 1300px; 
+  padding: 5px;
 }
 
-body {
+body, html {
+  margin: 0;
   background-image: url('./src/assets/backgroundimg.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  margin: 0;
 }
 
+h1 {
+  margin-top: 0px;
+}
+
+.search-bar {
+  display: inline-flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
 
 .main-content {
   display: flex;    
   justify-content: space-between;             
   flex-wrap: wrap;
-  margin-top: 50px;
+  margin-top: 0;
+}
+
+.main-content h2 {
+  display: none;
 }
 
 .main-content h2 {
@@ -24,18 +38,25 @@ body {
   text-decoration: underline;
   text-decoration-color: #ffffff;
   text-decoration-thickness: 2px;
-  padding-top: 0;
   margin-top: 0;
+  background-color: rgb(70, 70, 70, 0.7); 
+  color: white; 
+  padding: 10px; 
+  border-radius: 5px; 
 }
 
-.search-bar {
-  display: inline-flex;
-  gap: 15px
+.search-results,
+.playlist {
+  flex: 1;
+  min-width: 500px;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tracklist {
   flex: 1;
-  max-width: 48%;
   min-width: 300px;
   display: flex;
   flex-direction: column;
@@ -66,11 +87,9 @@ body {
   background-color: #555; 
 }
 
-
 .track {
   display: flex;
   align-items: center; 
-  margin: 10px 0; 
   width: 80%; 
 }
 
@@ -91,11 +110,28 @@ body {
   padding: 10px;
 }
 
+.track-details {
+  width: clamp(20rem, 40vw, 35rem);
+}
+
+.track-details h3,
+.track-details p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
 .track h3,
 .track p {
   margin: 0; 
   text-align: left; 
 }
+
+.searchbar-button:hover {
+  background-color: #0b7dda;
+}
+
 .button {
   background-color: #4CAF50; 
   color: white; 
@@ -116,4 +152,28 @@ body {
 .button-remove:hover {
   background-color: #661717; 
 }
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #1e1e1e;
+  padding: 30px;
+  border-radius: 10px;
+  color: white;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
 
