@@ -1,3 +1,15 @@
+<p align="center">
+  <a href="./src/assets/Preview1.png" target="_blank">
+    <img src="./src/assets/Preview1.png" alt="Preview 1" width="30%" />
+  </a>
+  <a href="./src/assets/Preview2.png" target="_blank">
+    <img src="./src/assets/Preview2.png" alt="Preview 2" width="30%" />
+  </a>
+  <a href="./src/assets/Preview3.png" target="_blank">
+    <img src="./src/assets/Preview3.png" alt="Preview 3" width="30%" />
+  </a>
+</p>
+
 # Jamming Music 🎵
 
 Jamming Music is a React-based web application that allows users to search for songs using the Spotify API, create custom playlists, and save them directly to their Spotify account. This project demonstrates the integration of Spotify's API with modern web development practices.
