@@ -1,29 +1,68 @@
 const clientId = import.meta.env.VITE_CLIENT_ID;
-const secretClientId = import.meta.env.VITE_SECRET_CLIENT_ID;
 const redirectUri = import.meta.env.VITE_REDIRECT_URI;
 const scopes = 'playlist-modify-private playlist-modify-public';
 
-// Fetch the token from Spotify API
-const getToken = async () => {
-  const tokenResponse = await fetch(
-    'https://accounts.spotify.com/api/token',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `grant_type=client_credentials&client_id=${clientId}&client_secret=${secretClientId}`,
-    }
-  );
+// Token caching to avoid multiple popups
+let cachedAccessToken = null;
+let tokenExpiryTime = null;
 
-  const tokenData = await tokenResponse.json();
-  return tokenData.access_token;
+// Get access token using implicit grant flow with caching
+const getAccessToken = () => {
+  return new Promise((resolve, reject) => {
+    // Check if we have a valid cached token
+    if (cachedAccessToken && tokenExpiryTime && Date.now() < tokenExpiryTime) {
+      resolve(cachedAccessToken);
+      return;
+    }
+
+    const popup = window.open(
+      `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`,
+      'Spotify Login',
+      'width=500,height=600'
+    );
+
+    const interval = setInterval(() => {
+      try {
+        if (popup.closed) {
+          clearInterval(interval);
+          reject(new Error('Popup closed by user'));
+        }
+
+        // Check if the popup URL contains the access token
+        const popupUrl = popup.location.href;
+        if (popupUrl.includes('access_token')) {
+          const urlParams = new URLSearchParams(popupUrl.split('#')[1]);
+          const accessToken = urlParams.get('access_token');
+          const expiresIn = urlParams.get('expires_in');
+          
+          // Cache the token and set expiry time
+          cachedAccessToken = accessToken;
+          tokenExpiryTime = Date.now() + (parseInt(expiresIn) * 1000) - 60000; // 1 minute buffer
+          
+          popup.close();
+          clearInterval(interval);
+          resolve(accessToken);
+        }
+      } catch (error) {
+        // Ignore cross-origin errors until the popup redirects to the same origin
+      }
+    }, 1000);
+  });
 };
 
-// Fetch tracks from Spotify API after fetching the token
+// Search tracks using cached token or prompt for authentication
 const searchTracks = async (searchTerm) => {
   try {
-    const accessToken = await getToken();
+    let accessToken;
+    
+    // Check if we have a cached token
+    if (cachedAccessToken && tokenExpiryTime && Date.now() < tokenExpiryTime) {
+      accessToken = cachedAccessToken;
+    } else {
+      // No cached token, get one through authentication
+      accessToken = await getAccessToken();
+    }
+    
     const trackResponse = await fetch(
       `https://api.spotify.com/v1/search?q=track%3A${encodeURIComponent(searchTerm)}&type=track`,
       {
@@ -117,35 +156,9 @@ const createPlaylistAndAddTracks = async (userId, playlistName, trackUris, acces
   }
 };
 
-// Open login popup and handle authentication
+// Open login popup and handle authentication (reuse the getAccessToken function)
 const openLoginPopup = () => {
-  return new Promise((resolve, reject) => {
-    const popup = window.open(
-      `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`,
-      'Spotify Login',
-      'width=500,height=600'
-    );
-
-    const interval = setInterval(() => {
-      try {
-        if (popup.closed) {
-          clearInterval(interval);
-          reject(new Error('Popup closed by user'));
-        }
-
-        // Check if the popup URL contains the access token
-        const popupUrl = popup.location.href;
-        if (popupUrl.includes('access_token')) {
-          const accessToken = new URLSearchParams(popupUrl.split('#')[1]).get('access_token');
-          popup.close();
-          clearInterval(interval);
-          resolve(accessToken);
-        }
-      } catch (error) {
-        // Ignore cross-origin errors until the popup redirects to the same origin
-      }
-    }, 1000);
-  });
+  return getAccessToken();
 };
 
 // Save playlist
