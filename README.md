@@ -14,6 +14,11 @@
 
 Jamming Music is a React-based web application that allows users to search for songs using the Spotify API, create custom playlists, and save them directly to their Spotify account. This project demonstrates the integration of Spotify's API with modern web development practices.
 
+# 🌐 **Live Demo**  
+Check it out [here](https://jammingmusicapp.netlify.app/)
+
+> Note: The API for this website hasn't been implemented yet, so it currently doesn't fetch data.
+
 ## Features ✨
 - **Search for Songs**: Users can search for tracks using the Spotify API.
 - **Create Playlists**: Add tracks to a custom playlist.
