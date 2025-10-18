@@ -15,22 +15,23 @@ const getAccessToken = () => {
       return;
     }
 
-    // Create a hidden iframe instead of popup to avoid redirect issues
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.style.position = 'absolute';
-    iframe.style.left = '-9999px';
-    document.body.appendChild(iframe);
-
-    const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
-    
-    iframe.src = authUrl;
+    const popup = window.open(
+      `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`,
+      'Spotify Login',
+      'width=500,height=600'
+    );
 
     const interval = setInterval(() => {
       try {
-        const iframeUrl = iframe.contentWindow.location.href;
-        if (iframeUrl.includes('access_token')) {
-          const urlParams = new URLSearchParams(iframeUrl.split('#')[1]);
+        if (popup.closed) {
+          clearInterval(interval);
+          reject(new Error('Popup closed by user'));
+        }
+
+        // Check if the popup URL contains the access token
+        const popupUrl = popup.location.href;
+        if (popupUrl.includes('access_token')) {
+          const urlParams = new URLSearchParams(popupUrl.split('#')[1]);
           const accessToken = urlParams.get('access_token');
           const expiresIn = urlParams.get('expires_in');
           
@@ -38,23 +39,14 @@ const getAccessToken = () => {
           cachedAccessToken = accessToken;
           tokenExpiryTime = Date.now() + (parseInt(expiresIn) * 1000) - 60000; // 1 minute buffer
           
-          document.body.removeChild(iframe);
+          popup.close();
           clearInterval(interval);
           resolve(accessToken);
         }
       } catch (error) {
-        // Ignore cross-origin errors until the iframe redirects to the same origin
+        // Ignore cross-origin errors until the popup redirects to the same origin
       }
     }, 1000);
-
-    // Cleanup after 5 minutes if no response
-    setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-        clearInterval(interval);
-        reject(new Error('Authentication timeout'));
-      }
-    }, 300000);
   });
 };
 
