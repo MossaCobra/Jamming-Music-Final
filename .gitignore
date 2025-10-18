@@ -25,3 +25,6 @@ dist-ssr
 
 # Ignore .env files that contain sensitive information
 *.env
+
+# Ignore deployment documentation
+DEPLOYMENT.md
