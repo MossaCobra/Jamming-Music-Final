@@ -69,9 +69,6 @@ function App() {
   return (
     <>
       <h1>Jamming Music</h1>
-      <p style={{textAlign: 'center', color: '#666', marginBottom: '20px'}}>
-        💡 <strong>Tip:</strong> To search for tracks, first save a playlist to authenticate with Spotify!
-      </p>
       <SearchBar search={setSearchTerm} setIsSearching={setIsSearching} />
       <div className="main-content">
         <div className="search-results">

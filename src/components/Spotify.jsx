@@ -15,23 +15,22 @@ const getAccessToken = () => {
       return;
     }
 
-    const popup = window.open(
-      `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`,
-      'Spotify Login',
-      'width=500,height=600'
-    );
+    // Create a hidden iframe instead of popup to avoid redirect issues
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.style.position = 'absolute';
+    iframe.style.left = '-9999px';
+    document.body.appendChild(iframe);
+
+    const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
+    
+    iframe.src = authUrl;
 
     const interval = setInterval(() => {
       try {
-        if (popup.closed) {
-          clearInterval(interval);
-          reject(new Error('Popup closed by user'));
-        }
-
-        // Check if the popup URL contains the access token
-        const popupUrl = popup.location.href;
-        if (popupUrl.includes('access_token')) {
-          const urlParams = new URLSearchParams(popupUrl.split('#')[1]);
+        const iframeUrl = iframe.contentWindow.location.href;
+        if (iframeUrl.includes('access_token')) {
+          const urlParams = new URLSearchParams(iframeUrl.split('#')[1]);
           const accessToken = urlParams.get('access_token');
           const expiresIn = urlParams.get('expires_in');
           
@@ -39,41 +38,45 @@ const getAccessToken = () => {
           cachedAccessToken = accessToken;
           tokenExpiryTime = Date.now() + (parseInt(expiresIn) * 1000) - 60000; // 1 minute buffer
           
-          popup.close();
+          document.body.removeChild(iframe);
           clearInterval(interval);
           resolve(accessToken);
         }
       } catch (error) {
-        // Ignore cross-origin errors until the popup redirects to the same origin
+        // Ignore cross-origin errors until the iframe redirects to the same origin
       }
     }, 1000);
+
+    // Cleanup after 5 minutes if no response
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+        clearInterval(interval);
+        reject(new Error('Authentication timeout'));
+      }
+    }, 300000);
   });
 };
 
-// Search tracks - only works after user has authenticated (when saving playlist)
+// Search tracks using cached token or prompt for authentication
 const searchTracks = async (searchTerm) => {
   try {
-    // Only search if user has already authenticated (has cached token)
-    if (!cachedAccessToken || !tokenExpiryTime || Date.now() >= tokenExpiryTime) {
-      // No valid token, return empty results with message
-      console.log('Please save a playlist first to authenticate with Spotify, then you can search for tracks.');
-      
-      // Show each title in the main content
-      const titles = document.querySelectorAll('.main-content h2');
-      titles.forEach(title => {
-        title.style.display = 'block';
-      });
-      
-      return [];
+    let accessToken;
+    
+    // Check if we have a cached token
+    if (cachedAccessToken && tokenExpiryTime && Date.now() < tokenExpiryTime) {
+      accessToken = cachedAccessToken;
+    } else {
+      // No cached token, get one through authentication
+      accessToken = await getAccessToken();
     }
     
-    // Use cached token for search
     const trackResponse = await fetch(
       `https://api.spotify.com/v1/search?q=track%3A${encodeURIComponent(searchTerm)}&type=track`,
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${cachedAccessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       }
