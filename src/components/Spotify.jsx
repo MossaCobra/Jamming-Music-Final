@@ -50,11 +50,18 @@ const getAccessToken = () => {
   });
 };
 
-// Fetch tracks from Spotify API after fetching the token
+// Search tracks using cached token or prompt for authentication
 const searchTracks = async (searchTerm) => {
   try {
-    // First, get access token through implicit grant flow
-    const accessToken = await getAccessToken();
+    let accessToken;
+    
+    // Check if we have a cached token
+    if (cachedAccessToken && tokenExpiryTime && Date.now() < tokenExpiryTime) {
+      accessToken = cachedAccessToken;
+    } else {
+      // No cached token, get one through authentication
+      accessToken = await getAccessToken();
+    }
     
     const trackResponse = await fetch(
       `https://api.spotify.com/v1/search?q=track%3A${encodeURIComponent(searchTerm)}&type=track`,
