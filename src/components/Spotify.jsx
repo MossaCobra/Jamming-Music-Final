@@ -50,25 +50,30 @@ const getAccessToken = () => {
   });
 };
 
-// Search tracks using cached token or prompt for authentication
+// Search tracks - only works after user has authenticated (when saving playlist)
 const searchTracks = async (searchTerm) => {
   try {
-    let accessToken;
-    
-    // Check if we have a cached token
-    if (cachedAccessToken && tokenExpiryTime && Date.now() < tokenExpiryTime) {
-      accessToken = cachedAccessToken;
-    } else {
-      // No cached token, get one through authentication
-      accessToken = await getAccessToken();
+    // Only search if user has already authenticated (has cached token)
+    if (!cachedAccessToken || !tokenExpiryTime || Date.now() >= tokenExpiryTime) {
+      // No valid token, return empty results with message
+      console.log('Please save a playlist first to authenticate with Spotify, then you can search for tracks.');
+      
+      // Show each title in the main content
+      const titles = document.querySelectorAll('.main-content h2');
+      titles.forEach(title => {
+        title.style.display = 'block';
+      });
+      
+      return [];
     }
     
+    // Use cached token for search
     const trackResponse = await fetch(
       `https://api.spotify.com/v1/search?q=track%3A${encodeURIComponent(searchTerm)}&type=track`,
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${cachedAccessToken}`,
           'Content-Type': 'application/json',
         },
       }
