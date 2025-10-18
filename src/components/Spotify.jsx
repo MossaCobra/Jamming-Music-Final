@@ -2,17 +2,19 @@ const clientId = import.meta.env.VITE_CLIENT_ID;
 const redirectUri = import.meta.env.VITE_REDIRECT_URI;
 const scopes = 'playlist-modify-private playlist-modify-public';
 
-// Note: For production, you should implement a backend service to handle the client credentials flow
-// This is a simplified version that works for development and basic deployment
-const getToken = async () => {
-  // For now, we'll use the implicit grant flow for search functionality
-  // The client credentials flow requires a backend service for security
-  throw new Error('Search functionality requires authentication. Please log in to Spotify first.');
-};
+// Token caching to avoid multiple popups
+let cachedAccessToken = null;
+let tokenExpiryTime = null;
 
-// Get access token using implicit grant flow
+// Get access token using implicit grant flow with caching
 const getAccessToken = () => {
   return new Promise((resolve, reject) => {
+    // Check if we have a valid cached token
+    if (cachedAccessToken && tokenExpiryTime && Date.now() < tokenExpiryTime) {
+      resolve(cachedAccessToken);
+      return;
+    }
+
     const popup = window.open(
       `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`,
       'Spotify Login',
@@ -29,7 +31,14 @@ const getAccessToken = () => {
         // Check if the popup URL contains the access token
         const popupUrl = popup.location.href;
         if (popupUrl.includes('access_token')) {
-          const accessToken = new URLSearchParams(popupUrl.split('#')[1]).get('access_token');
+          const urlParams = new URLSearchParams(popupUrl.split('#')[1]);
+          const accessToken = urlParams.get('access_token');
+          const expiresIn = urlParams.get('expires_in');
+          
+          // Cache the token and set expiry time
+          cachedAccessToken = accessToken;
+          tokenExpiryTime = Date.now() + (parseInt(expiresIn) * 1000) - 60000; // 1 minute buffer
+          
           popup.close();
           clearInterval(interval);
           resolve(accessToken);
