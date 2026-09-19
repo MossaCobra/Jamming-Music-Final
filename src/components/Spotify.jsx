@@ -1,51 +1,107 @@
 const clientId = import.meta.env.VITE_CLIENT_ID;
-const redirectUri = import.meta.env.VITE_REDIRECT_URI;
+// Use the current origin rather than a fixed env var, so the OAuth popup
+// always redirects back to whichever deploy (production, preview, local)
+// the app is actually running on. That origin must be registered as an
+// allowed redirect URI in the Spotify app dashboard.
+const redirectUri = window.location.origin;
 const scopes = 'playlist-modify-private playlist-modify-public';
+const CODE_VERIFIER_STORAGE_KEY = 'spotify_code_verifier';
 
 // Token caching to avoid multiple popups
 let cachedAccessToken = null;
 let tokenExpiryTime = null;
 
-// Get access token using implicit grant flow with caching
-const getAccessToken = () => {
-  return new Promise((resolve, reject) => {
-    // Check if we have a valid cached token
-    if (cachedAccessToken && tokenExpiryTime && Date.now() < tokenExpiryTime) {
-      resolve(cachedAccessToken);
-      return;
-    }
+// PKCE helpers (Spotify requires the Authorization Code with PKCE flow;
+// the implicit grant flow it used before now redirects back with
+// "response_type must be code" instead of a token).
+const generateCodeVerifier = (length = 128) => {
+  const possibleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  const randomValues = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(randomValues, (value) => possibleChars[value % possibleChars.length]).join('');
+};
 
-    const popup = window.open(
-      `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`,
-      'Spotify Login',
-      'width=500,height=600'
-    );
+const generateCodeChallenge = async (codeVerifier) => {
+  const data = new TextEncoder().encode(codeVerifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+};
+
+// Exchange an authorization code for an access token via the Netlify
+// function, which talks to Spotify's token endpoint.
+const exchangeCodeForToken = async (code, codeVerifier) => {
+  const response = await fetch('/.netlify/functions/spotify-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, codeVerifier, redirectUri }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to exchange authorization code');
+  }
+
+  return data;
+};
+
+// Get access token using the Authorization Code with PKCE flow, with caching
+const getAccessToken = async () => {
+  // Check if we have a valid cached token
+  if (cachedAccessToken && tokenExpiryTime && Date.now() < tokenExpiryTime) {
+    return cachedAccessToken;
+  }
+
+  const codeVerifier = generateCodeVerifier();
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+  sessionStorage.setItem(CODE_VERIFIER_STORAGE_KEY, codeVerifier);
+
+  const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&code_challenge_method=S256&code_challenge=${codeChallenge}`;
+
+  return new Promise((resolve, reject) => {
+    const popup = window.open(authUrl, 'Spotify Login', 'width=500,height=600');
 
     const interval = setInterval(() => {
-      try {
-        if (popup.closed) {
-          clearInterval(interval);
-          reject(new Error('Popup closed by user'));
-        }
+      (async () => {
+        try {
+          if (popup.closed) {
+            clearInterval(interval);
+            reject(new Error('Popup closed by user'));
+            return;
+          }
 
-        // Check if the popup URL contains the access token
-        const popupUrl = popup.location.href;
-        if (popupUrl.includes('access_token')) {
-          const urlParams = new URLSearchParams(popupUrl.split('#')[1]);
-          const accessToken = urlParams.get('access_token');
-          const expiresIn = urlParams.get('expires_in');
-          
-          // Cache the token and set expiry time
-          cachedAccessToken = accessToken;
-          tokenExpiryTime = Date.now() + (parseInt(expiresIn) * 1000) - 60000; // 1 minute buffer
-          
-          popup.close();
-          clearInterval(interval);
-          resolve(accessToken);
+          // Check if the popup has redirected back with the authorization code
+          const popupUrl = new URL(popup.location.href);
+          const error = popupUrl.searchParams.get('error');
+          const code = popupUrl.searchParams.get('code');
+
+          if (error) {
+            clearInterval(interval);
+            popup.close();
+            reject(new Error(`Spotify authorization failed: ${error}`));
+            return;
+          }
+
+          if (code) {
+            clearInterval(interval);
+            popup.close();
+
+            const storedVerifier = sessionStorage.getItem(CODE_VERIFIER_STORAGE_KEY);
+            sessionStorage.removeItem(CODE_VERIFIER_STORAGE_KEY);
+
+            const { access_token, expires_in } = await exchangeCodeForToken(code, storedVerifier);
+
+            // Cache the token and set expiry time
+            cachedAccessToken = access_token;
+            tokenExpiryTime = Date.now() + (parseInt(expires_in) * 1000) - 60000; // 1 minute buffer
+
+            resolve(access_token);
+          }
+        } catch {
+          // Ignore cross-origin errors until the popup redirects to the same origin
         }
-      } catch (error) {
-        // Ignore cross-origin errors until the popup redirects to the same origin
-      }
+      })();
     }, 1000);
   });
 };
